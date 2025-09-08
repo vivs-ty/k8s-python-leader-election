@@ -1,13 +1,19 @@
 apiVersion: v1
+kind: Namespace
+metadata:
+  name: leader-election-ns
+---
+apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: leader-election-sa
-  namespace: default
+  namespace: leader-election-ns
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: leader-election
+  namespace: leader-election-ns
   labels:
     app: leader-election
 spec:
@@ -29,4 +35,44 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: metadata.name
-        imagePullPolicy: Always
+        - name: LEASE_NAME
+          value: "leader-election-lease"
+        - name: NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: LEASE_DURATION_SECONDS
+          value: "15"
+        - name: RENEW_INTERVAL_SECONDS
+          value: "5"
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "200m"
+            memory: "256Mi"
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 20
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 10
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - leader-election
+              topologyKey: "kubernetes.io/hostname"
