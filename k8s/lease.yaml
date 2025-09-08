@@ -2,6 +2,6 @@ apiVersion: coordination.k8s.io/v1
 kind: Lease
 metadata:
   name: leader-election-lease
-  namespace: default
+  namespace: leader-election-ns
 spec:
   leaseDurationSeconds: 15
