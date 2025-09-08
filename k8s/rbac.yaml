@@ -2,7 +2,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   name: leader-election-role
-  namespace: default
+  namespace: leader-election-ns
 rules:
 - apiGroups: ["coordination.k8s.io"]
   resources: ["leases"]
@@ -12,7 +12,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: leader-election-rolebinding
-  namespace: default
+  namespace: leader-election-ns
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
@@ -20,4 +20,4 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: leader-election-sa
-  namespace: default
+  namespace: leader-election-ns
