@@ -30,19 +30,19 @@ MIT
 
 --------------------------------------------------------------------------------------------------
 
-k8s-python-leader-election/
-│
-├── app.py                 # Python app with leader election logic
-├── Dockerfile             # To build container image
-├── requirements.txt       # Python dependencies
-├── k8s/
-│   ├── deployment.yaml    # Kubernetes Deployment and ServiceAccount manifests
-│   ├── lease.yaml         # Lease resource for leader election lock
-│   ├── rbac.yaml          # RBAC manifests granting lease access
-│
-├── README.md              # Project overview, usage, contribution
-└── .github/
-    └── workflows/
-        └── ci-cd.yaml     # GitHub Actions workflow (optional)
+ k8s-python-leader-election/
+ │
+ ├── app.py                 # Python app with leader election logic
+ ├── Dockerfile             # To build container image
+ ├── requirements.txt       # Python dependencies
+ ├── k8s/
+ │    ├── deployment.yaml    # Kubernetes Deployment and ServiceAccount manifests
+ │    ├── lease.yaml         # Lease resource for leader election lock
+ │    ├── rbac.yaml          # RBAC manifests granting lease access
+ │
+ ├── README.md              # Project overview, usage, contribution
+ └── .github/
+     └── workflows/
+         └── ci-cd.yaml     # GitHub Actions workflow (optional)
 
 @vivs-ty 
