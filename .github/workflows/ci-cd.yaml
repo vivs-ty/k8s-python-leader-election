@@ -6,6 +6,9 @@ on:
       - main
   pull_request:
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -31,4 +34,7 @@ jobs:
         context: .
         file: Dockerfile
         push: ${{ github.event_name == 'push' }}
-        tags: ${{ secrets.DOCKERHUB_USERNAME }}/k8s-python-leader-election:latest
+        tags: >-
+          ${{ github.event_name == 'push'
+            && format('{0}/k8s-python-leader-election:latest', secrets.DOCKERHUB_USERNAME)
+            || 'k8s-python-leader-election:pr-build' }}
