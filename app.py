@@ -1,6 +1,8 @@
-import time
 import logging
 import os
+import signal
+import threading
+from http.server import HTTPServer, BaseHTTPRequestHandler
 from kubernetes import client, config
 from kubernetes.client.rest import ApiException
 from datetime import datetime, timezone, timedelta
@@ -16,6 +18,49 @@ logging.basicConfig(
     format='%(asctime)s %(levelname)s %(message)s'
 )
 logger = logging.getLogger(__name__)
+
+
+class HealthHandler(BaseHTTPRequestHandler):
+    """Minimal HTTP handler for Kubernetes liveness and readiness probes."""
+    def do_GET(self):
+        if self.path in ('/healthz', '/ready'):
+            self.send_response(200)
+            self.end_headers()
+            self.wfile.write(b'OK')
+        else:
+            self.send_response(404)
+            self.end_headers()
+
+    def log_message(self, format, *args):
+        pass  # suppress per-request access logs
+
+
+def start_health_server(port: int = 8080):
+    server = HTTPServer(('', port), HealthHandler)
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    logger.info(f"Health check server listening on port {port}")
+
+
+_shutdown = threading.Event()
+
+
+def _handle_signal(signum, frame):
+    logger.info(f"Received signal {signum}, shutting down gracefully…")
+    _shutdown.set()
+
+
+def release_lease(api, identity):
+    """Clear holder_identity so another pod can immediately acquire leadership."""
+    try:
+        lease = get_lease(api)
+        if lease and lease.spec.holder_identity == identity:
+            lease.spec.holder_identity = None
+            lease.spec.renew_time = None
+            api.replace_namespaced_lease(name=LEASE_NAME, namespace=NAMESPACE, body=lease)
+            logger.info(f"{identity} released the lease")
+    except Exception as e:
+        logger.warning(f"Failed to release lease on shutdown: {e}")
 
 def create_lease_api_object():
     return client.CoordinationV1Api()
@@ -104,12 +149,17 @@ def main():
     except config.ConfigException:
         config.load_kube_config()
 
+    signal.signal(signal.SIGTERM, _handle_signal)
+    signal.signal(signal.SIGINT, _handle_signal)
+
+    start_health_server()
+
     api = create_lease_api_object()
     identity = os.getenv('POD_NAME', f"pod-{os.getpid()}")
 
     logger.info(f"Starting leader election with identity: {identity}")
 
-    while True:
+    while not _shutdown.is_set():
         try:
             if try_acquire_leader(api, identity):
                 logger.info(f"{identity} is the MASTER node")
@@ -119,7 +169,10 @@ def main():
                 # Worker logic here
         except Exception as e:
             logger.error(f"Unexpected exception in leader election loop: {e}")
-        time.sleep(RENEW_INTERVAL_SECONDS)
+        _shutdown.wait(timeout=RENEW_INTERVAL_SECONDS)
+
+    release_lease(api, identity)
+    logger.info("Shutdown complete")
 
 if __name__ == "__main__":
     main()

@@ -25,9 +25,7 @@ Feel free to fork, raise issues, and submit pull requests!
 
 ## License
 
-Apache-2.0
 MIT
-
 --------------------------------------------------------------------------------------------------
 
  k8s-python-leader-election/
