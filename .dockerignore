@@ -2,6 +2,11 @@ __pycache__
 .git
 .gitignore
 Dockerfile
+.dockerignore
 *.pyc
 .idea
 .vscode
+.github
+k8s/
+*.md
+LICENSE

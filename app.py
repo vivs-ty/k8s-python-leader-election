@@ -104,6 +104,9 @@ def try_acquire_leader(api, identity):
     if lease is None:
         create_lease(api)
         lease = get_lease(api)
+        if lease is None:
+            logger.error("Lease still not found after creation — skipping cycle")
+            return False
 
     spec = lease.spec
     renew_time = spec.renew_time
