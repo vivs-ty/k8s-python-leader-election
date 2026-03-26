@@ -22,14 +22,12 @@ This project demonstrates leader election in Kubernetes using Python and the Lea
 
 ```bash
 # 1. Build the image
-docker build -t <dockerhub-username>/k8s-python-leader-election:latest .
+docker build -t viv1907/k8s-python-leader-election:latest .
 
 # 2. Push to Docker Hub
-docker push <dockerhub-username>/k8s-python-leader-election:latest
+docker push viv1907/k8s-python-leader-election:latest
 
-# 3. Update k8s/deployment.yaml — replace <your-dockerhub-username> with your username
-
-# 4. Apply all manifests
+# 3. Apply all manifests
 kubectl apply -f k8s/
 ```
 

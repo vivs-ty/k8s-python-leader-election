@@ -30,7 +30,7 @@ spec:
       terminationGracePeriodSeconds: 30
       containers:
       - name: leader-election
-        image: <your-dockerhub-username>/k8s-python-leader-election:latest
+        image: viv1907/k8s-python-leader-election:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 8080
