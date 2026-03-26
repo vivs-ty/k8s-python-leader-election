@@ -12,6 +12,8 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
     steps:
     - uses: actions/checkout@v4
 
@@ -23,7 +25,7 @@ jobs:
 
     - name: Log in to DockerHub
       if: >-
-        secrets.DOCKERHUB_USERNAME != '' &&
+        env.DOCKERHUB_USERNAME != '' &&
         (github.event_name == 'push' ||
         (github.event_name == 'pull_request' &&
          github.event.pull_request.head.repo.full_name == github.repository))
@@ -34,11 +36,9 @@ jobs:
 
     - name: Compute image tags
       id: tags
-      env:
-        DOCKERHUB_USER: ${{ secrets.DOCKERHUB_USERNAME }}
       run: |
-        if [[ "${{ github.event_name }}" == "push" ]] && [[ -n "${DOCKERHUB_USER}" ]]; then
-          echo "tags=${DOCKERHUB_USER}/k8s-python-leader-election:latest,${DOCKERHUB_USER}/k8s-python-leader-election:${{ github.sha }}" >> $GITHUB_OUTPUT
+        if [[ "${{ github.event_name }}" == "push" ]] && [[ -n "$DOCKERHUB_USERNAME" ]]; then
+          echo "tags=${DOCKERHUB_USERNAME}/k8s-python-leader-election:latest,${DOCKERHUB_USERNAME}/k8s-python-leader-election:${{ github.sha }}" >> $GITHUB_OUTPUT
         else
           echo "tags=k8s-python-leader-election:pr-build" >> $GITHUB_OUTPUT
         fi
@@ -48,7 +48,7 @@ jobs:
       with:
         context: .
         file: Dockerfile
-        push: ${{ github.event_name == 'push' && secrets.DOCKERHUB_USERNAME != '' }}
+        push: ${{ github.event_name == 'push' && env.DOCKERHUB_USERNAME != '' }}
         tags: ${{ steps.tags.outputs.tags }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
